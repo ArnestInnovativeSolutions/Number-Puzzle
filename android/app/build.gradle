@@ -76,8 +76,11 @@ import com.android.build.OutputFile
  */
 
 project.ext.react = [
+    bundleAssetName: "index.android.bundle",
     entryFile: "index.js",
     enableHermes: false,  // clean and rebuild if changing
+    bundleInRelease: true,
+    bundleInDebug: false,
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
@@ -90,12 +93,12 @@ apply from: "../../node_modules/react-native/react.gradle"
  * Upload all the APKs to the Play Store and people will download
  * the correct one based on the CPU architecture of their device.
  */
-def enableSeparateBuildPerCPUArchitecture = false
+def enableSeparateBuildPerCPUArchitecture = true
 
 /**
  * Run Proguard to shrink the Java bytecode in release builds.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 /**
  * The preferred build flavor of JavaScriptCore.
@@ -128,8 +131,7 @@ android {
     }
 
     defaultConfig {
-        vectorDrawables.useSupportLibrary = true
-        applicationId "com.helloworld"
+        applicationId "com.numberpuzzle"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -177,15 +179,6 @@ android {
 
         }
     }
-
-    packagingOptions {
-        pickFirst '**/armeabi-v7a/libc++_shared.so'
-        pickFirst '**/x86/libc++_shared.so'
-        pickFirst '**/arm64-v8a/libc++_shared.so'
-        pickFirst '**/x86_64/libc++_shared.so'
-        pickFirst '**/x86/libjsc.so'
-        pickFirst '**/armeabi-v7a/libjsc.so'
-    }
 }
 
 dependencies {
@@ -194,11 +187,11 @@ dependencies {
     implementation "com.facebook.react:react-native:+"  // From node_modules
 
     if (enableHermes) {
-      def hermesPath = "../../node_modules/hermesvm/android/";
-      debugImplementation files(hermesPath + "hermes-debug.aar")
-      releaseImplementation files(hermesPath + "hermes-release.aar")
+        def hermesPath = "../../node_modules/hermes-engine/android/";
+        debugImplementation files(hermesPath + "hermes-debug.aar")
+        releaseImplementation files(hermesPath + "hermes-release.aar")
     } else {
-      implementation jscFlavor
+        implementation jscFlavor
     }
 }
 

@@ -1,7 +1,7 @@
-import React, {  Component } from 'react';
+import React, { Fragment, Component } from 'react';
 import { StyleSheet, Text, View, Button, TouchableOpacity, ToastAndroid } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import {widthPercentageToDP as wp, heightPercentageToDP as hp} from 'react-native-responsive-screen';
 
 
 export default class App extends Component {
@@ -9,8 +9,7 @@ export default class App extends Component {
   constructor() {
     super();
     this.state = {
-      startedGame: false,
-      gameOver: false,
+      startedGame:false,
       stats: {
         time: '0',
         moves: 0
@@ -133,17 +132,11 @@ export default class App extends Component {
           },
         ]]
     }
+    this.GetData();
 
-    this.getSystemState();
+
   }
-  
-  resetTimer = () => {
-    clearInterval(this.intervalID);
-    this.state.timer.hours = 0;
-    this.state.timer.minutes = 0;
-    this.state.timer.seconds = 0;
-    
-  }
+
   generateRandomValue = () => {
     var min = 0, max = 16;
     var rand = Math.ceil(Math.random() * (max - min) + min);
@@ -153,9 +146,7 @@ export default class App extends Component {
   shuffleBoard = () => {
     // arraryobject to keep assigned values
     // function to give random value between 0 and 15
-    this.state.startedGame = true;
-    this.state.gameOver = false;
-    // this.setState({ startedGame: true })
+    this.setState({startedGame:true})
     let randomValues = [];
     let val, rand;
     for (let row = 0; row < 4; row++) {
@@ -165,23 +156,26 @@ export default class App extends Component {
           do {
             rand = this.generateRandomValue();
           }
-          while (randomValues.includes(rand));
-          randomValues.push(rand);
+          while (randomValues.includes(rand))
+          randomValues.push(rand)
           val = rand;
         }
         else {
-          randomValues.push(rand);
+          randomValues.push(rand)
           val = rand;
         }
 
         //  this.state.data[row][col].row = row;
         //  this.state.data[row][col].col = col;
         if (val == 16) val = 0;
-        this.setValue(row, col, val);
+        this.setValue(row, col, val)
       }
     }
-    this.resetTimer();
     this.setState(this.state);
+    clearInterval(this.intervalID);
+    this.state.timer.minutes = 0;
+    this.state.timer.seconds = 0;
+    this.setState(this.state.timer)
     this.intervalID = setInterval(
       () => this.tick(),
       1000
@@ -267,12 +261,18 @@ export default class App extends Component {
       }
     }
     if (movesLeft == 0) {
-      this.state.gameOver=true;
+      ToastAndroid.show('Congragulations! you Won', ToastAndroid.LONG)
+      clearInterval(this.intervalID);
+      this.Storage();
+      this.GetData();
+      this.state.timer.hours = 0;
+      this.state.timer.minutes = 0;
+      this.state.timer.seconds = 0;
       this.state.analytics.move = 0;
-      this.updateSystemState();
-      this.resetTimer();
-      this.getSystemState();     
-      this.setState(this.state);
+      this.setState(this.state.timer)
+      this.setState(this.state.analytics)
+
+
     }
   }
   tick() {
@@ -289,15 +289,14 @@ export default class App extends Component {
 
   }
 
-  setSystemState = async (result) => {
+  storeData = async (result) => {
     try {
       await AsyncStorage.setItem('@BestResult', JSON.stringify(result))
     } catch (e) {
       console.log(e)
     }
   }
-
-  getSystemState = () => {
+  GetData = () => {
     try {
       AsyncStorage.getItem('@BestResult', (err, result) => {
         if (result == null) {
@@ -315,8 +314,7 @@ export default class App extends Component {
     }
 
   }
-
-  removeSystemState = async () => {
+  removeValue = async () => {
     try {
       await AsyncStorage.removeItem('@BestResult')
       // this.setState({stats:temp})
@@ -325,18 +323,16 @@ export default class App extends Component {
     }
 
   }
-
-  updateSystemState = async () => {
+  Storage = async () => {
     currentTime = String(this.state.timer.hours) + ':' + String(this.state.timer.minutes) + ':' + String(this.state.timer.minutes);
-    if (this.state.stats.time != 0) {
+    if (this.state.stats.time != '0' || '0:0:0') {
       if (Date.parse(currentTime) < Date.parse(String(this.state.stats.time))) {
         let result = {
           time: currentTime,
           moves: this.state.analytics.moves
         }
-
-        await this.removeSystemState();
-        await this.setSystemState(result);
+        await this.removeValue();
+        await this.storeData(result);
       }
     }
     else {
@@ -344,112 +340,77 @@ export default class App extends Component {
         time: currentTime,
         moves: this.state.analytics.moves
       }
-      await this.setSystemState(result);
+      await this.storeData(result);
     }
+    this.setState(this.state.stats)
+    this.setState(this.state.analytics)
   }
-
-  renderBest = () => {
-    if (this.state.stats.time != 0) {
-      return (
+  renderBest = ()=>{
+    if(this.state.stats.time == 0)
+    {
+      return(
         <View style={{ flexDirection: 'row', margin: 7, justifyContent: 'flex-end' }}>
-          <Text style={{ fontSize: 20, color: 'black', fontFamily: 'Roboto', paddingRight: 10, fontWeight: "bold" }}>Best</Text>
-          <Text style={{ fontSize: 20, color: 'black', fontFamily: 'Roboto', paddingRight: 10, }}>Time : {this.state.stats.time}</Text>
-          <Text style={{ fontSize: 20, color: 'black', fontFamily: 'Roboto' }}>Moves : {this.state.stats.moves}</Text>
-        </View>
+            <Text style={{ fontSize: 20, color: 'black', fontFamily: 'Roboto', paddingRight: 10, fontWeight: "bold" }}>Best</Text>
+            <Text style={{ fontSize: 20, color: 'black', fontFamily: 'Roboto', paddingRight: 10, }}>Time : {this.state.stats.time}</Text>
+            <Text style={{ fontSize: 20, color: 'black', fontFamily: 'Roboto' }}>Moves : {this.state.stats.moves}</Text>
+          </View>
       )
     }
   }
-
-  renderBoard = () => {
-    // this.state.startedGame = true;
-    // this.state.gameOver = false;
-    this.shuffleBoard();
-    // this.setState(this.state)
-  }
-
-  quitGame = () => {
-    this.setState({ startedGame: false });
-  }
-
   render() {
-    if (this.state.startedGame == false) {
-      return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '##F5F5F5' }}>
-          <Button
-            title="START GAME"
-            color='#32CD32'
-            onPress={() => this.renderBoard()} />
-        </View>
-      )
-    }
-    else if (this.state.gameOver == true) {
-      return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '##F5F5F5', }}>
-          <Text style={{ fontSize: 25, color: 'black', fontWeight: 'bold', marginBottom: 10 }}>YOU WON!</Text>
-          <Button
-            title="START GAME"
-            color='#32CD32'
-            onPress={() => this.renderBoard()} />
-        </View>
-      )
-    }
-    else {
-      return (
-        <View style={{ flex: 1, position: 'relative', backgroundColor: '##F5F5F5', flexDirection: 'column', }}>
-          {
-            this.renderBest()
-          }
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center", width: wp('100%'), height: hp('50%') }}>
-            <View style={{ flexDirection: 'row', margin: 7, justifyContent: 'space-between' }}>
-              <Text style={{ fontSize: 22, fontFamily: 'Roboto', color: 'black', alignItems: 'flex-end' }}>
-                {this.state.timer.minutes} m :{this.state.timer.seconds} s
-            </Text>
-            </View>
-            {
-              this.state.data.map((item, i) => (
-                <View style={{ flexDirection: 'row', }} key={i} >
-                  {
-                    item.map((rowValues, k) => (
-                      <View key={(i * 4) + (k + 1)}>
-                        <TouchableOpacity style={{
-                          backgroundColor: (rowValues.value == 0) ? 'gray' : (rowValues.isCorrect == true) ? 'skyblue' : 'powderblue',
-                          borderColor: 'black',
-                          borderWidth: 2,
-                          height: hp('15%'),
-                          marginRight: -1,
-                          marginTop: -1,
-                          marginBottom: -1,
-                          marginLeft: -1,
-                          padding: 0,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: wp('25%'),
 
-                        }}
-                          onPress={() => this.move(i, k)} >
-                          <Text style={{ fontSize: 35, color: 'black', fontWeight: 'bold', fontFamily: 'Roboto' }} >{(rowValues.value == 0) ? " " : rowValues.value}</Text>
-                        </TouchableOpacity>
-                      </View>
-                    )
-                    )
-                  }
-                </View>
-              ))
-            }
+    return (
+      <View style={{ flex: 1, position: 'relative', backgroundColor: '##F5F5F5', flexDirection: 'column',  }}>
+        {
+          this.renderBest()         
+        }
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", width:wp('100%'), height:hp('50%') }}>
+          <View style={{ flexDirection: 'row', margin: 7, justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: 22, fontFamily: 'Roboto', color: 'black', alignItems: 'flex-end' }}>
+              {this.state.timer.minutes} m :{this.state.timer.seconds} s
+            </Text>
           </View>
-          <View style={{ flexDirection: 'row', marginBottom: 20, justifyContent: 'space-evenly' }}>
-            <Button
-              title="SHUFFLE BOARD"
-              color='#32CD32'
-              onPress={() => this.renderBoard()} />
-            <Button
-              title="QUIT GAME"
-              color='#32CD32'
-              onPress={() => this.quitGame()} />
-          </View>
+          {
+            this.state.data.map((item, i) => (
+              <View style={{ flexDirection: 'row', }} key={i} >
+                {
+                  item.map((rowValues, k) => (
+                    <View key={(i * 4) + (k + 1)}>
+                      <TouchableOpacity style={{
+                        backgroundColor: (rowValues.value == 0) ? 'gray' : (rowValues.isCorrect == true) ? 'skyblue' : 'powderblue',
+                        borderColor: 'black',
+                        borderWidth: 2,
+                        height:hp('15%') ,
+                        marginRight: -1,
+                        marginTop: -1,
+                        marginBottom: -1,
+                        marginLeft: -1,
+                        padding: 0,
+                        alignItems: 'center',
+                        justifyContent:'center',
+                        width:wp('25%'),
+                       
+                      }}
+                        onPress={() => this.move(i, k)} >
+                        <Text style={{ fontSize: 35, color: 'black', fontWeight: 'bold', fontFamily: 'Roboto' }} >{(rowValues.value == 0) ? " " : rowValues.value}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )
+                  )
+                }
+              </View>
+            ))
+          }
         </View>
-      )
-    }
+        <View style={{ flexDirection: 'row', margin: 7, justifyContent: "center" }}>
+          <Button
+            title="START GAME"
+            color='#32CD32'
+            onPress={() => this.shuffleBoard()}
+          />
+        </View>
+      </View>
+    )
   }
 }
 
