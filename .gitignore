@@ -6,6 +6,8 @@
 #
 build/
 release/
+package-lock.json
+yarn.lock
 *.pbxuser
 !default.pbxuser
 *.mode1v3
